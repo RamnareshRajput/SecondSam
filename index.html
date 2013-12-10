@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	<title>Sam App</title>
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.0a3/jquery.mobile-1.0a3.min.css" />
+	<script src="http://code.jquery.com/jquery-1.5.min.js"></script>
+	<script src="http://code.jquery.com/mobile/1.0a3/jquery.mobile-1.0a3.min.js"></script>
+<script type="text/javascript" src="jquery.json-2.2.min.js"></script>
+<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+<script>
+$(document).ready(function() {
+
+	$('#findusPage').live('pagecreate',function(event){
+ 		//run your own enhancement scripting here...
+		$("#drivingButton").click(function() {
+			//First - try to find where I am...
+			navigator.geolocation.getCurrentPosition(function(pos){
+				var lat = pos.coords.latitude;
+				var lon = pos.coords.longitude;
+				var dirApi = new google.maps.DirectionsService();
+				console.log('ready to drive from '+lat+','+lon);
+				dirReq = {};
+				dirReq.destination = "Baton Rouge, LA";
+				dirReq.origin = new google.maps.LatLng(lat,lon);
+				dirReq.travelMode = google.maps.DirectionsTravelMode.DRIVING;
+				dirApi.route(dirReq,function(dirResult,dirStatus) {
+					if (dirStatus != google.maps.DirectionsStatus.OK) {
+						alert("Driving API error: "+dirStatus);
+					}
+					//our steps are dirResult.routes[0].legs[0].steps
+					var steps = dirResult.routes[0].legs[0].steps;
+					var copy = dirResult.routes[0].copyrights;
+					console.dir(steps);
+					var niceSteps = [];
+					for (var i = 0; i < steps.length; i++) {
+						step = {};
+						step.text = steps[i].instructions;
+						step.distance = steps[i].distance.text;
+						step.duration = steps[i].duration.text;
+						step.endlat = steps[i].end_location.lat();
+						step.endlon = steps[i].end_location.lng();
+						niceSteps[niceSteps.length] = step;
+					}
+					console.dir(niceSteps);
+					$.post("store.cfm", {data:$.toJSON(niceSteps)}, function() {
+						$.mobile.changePage("driving.cfm");
+						console.log('done');
+					});
+				});
+			});
+		},function(code, message){
+			alert("Geolocation error: "+message);
+		});
+	});
+
+});
+
+</script>
+</head>
+<body>
+
+<div data-role="page" data-theme="e">
+
+	<div data-role="header">
+		<h1>Apex Hotels</h1>
+	</div>
+
+	<div data-role="content">
+		<ul data-role="listview" data-inset="true">
+			<li data-role="list-divider">Welcome to Apex Hotels</li>
+			<li><a href="contact.html">Contact Us</a></li>
+			<li><a href="find.html">Find Us</a></li>
+			<li><a href="#about">About</a></li>
+		</ul>
+	</div>
+
+	<div data-role="footer">
+		<h4>This is NOT a real Apex Hotels page.</h4>
+	</div>
+
+</div>
+
+<div data-role="page" id="about" data-theme="e">
+
+	<div data-role="header">
+		<h1>About</h1>
+	</div>
+
+	<div data-role="content">
+		<p>
+		This is demo content.
+		</p>
+	</div>
+
+	<div data-role="footer">
+		<h4>Page Footer</h4>
+	</div>
+
+</div>
+
+</body>
+</html>
